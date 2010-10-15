@@ -13,5 +13,31 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-require 'hornetseye-qt4/xvwidget'
+
+# Namespace of Hornetseye computer vision library
+module Hornetseye
+
+  class XvWidget < Qt::Widget
+
+    public
+
+    alias_method :orig_write,:write
+
+    def initialize( parent = nil, grab_port_now = true )
+      super parent
+      XvWidget.register self
+      grabPort if grab_port_now
+    end
+
+    def closeEvent( e )
+      releasePort
+      XvWidget.unregister self
+    end
+
+    def inspect
+      'XvWidget'
+    end
+  end
+
+end
 

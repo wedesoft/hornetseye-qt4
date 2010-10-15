@@ -28,7 +28,7 @@ HOMEPAGE = %q{http://wedesoft.github.com/hornetseye-qt4/}
 
 OBJ = CC_FILES.ext 'o'
 $CXXFLAGS = ENV[ 'CXXFLAGS' ] || ''
-$CXXFLAGS = "#{$CXXFLAGS} -fPIC -DNDEBUG -DHAVE_CONFIG_H"
+$CXXFLAGS = "#{$CXXFLAGS} -fPIC -DNDEBUG -DQT_SHARED -I/usr/include/qt4"
 if RbConfig::CONFIG[ 'rubyhdrdir' ]
   $CXXFLAGS = "#{$CXXFLAGS} -I#{RbConfig::CONFIG[ 'rubyhdrdir' ]} " +
              "-I#{RbConfig::CONFIG[ 'rubyhdrdir' ]}/#{RbConfig::CONFIG[ 'arch' ]}"
@@ -45,7 +45,7 @@ desc 'Compile Ruby extension (default)'
 task :all => [ SO_FILE ]
 
 file SO_FILE => OBJ do |t|
-   sh "#{CXX} -shared -o #{t.name} #{OBJ} -lX11 -lXv #{$LIBRUBYARG}"
+   sh "#{CXX} -shared -o #{t.name} #{OBJ} -lX11 -lXv -lQtGui -lQtCore #{$LIBRUBYARG}"
    sh "#{STRIP} --strip-all #{t.name}"
 end
 
@@ -114,6 +114,7 @@ begin
     s.has_rdoc = 'yard'
     s.extra_rdoc_files = []
     s.rdoc_options = %w{--no-private}
+    s.add_dependency %<qtruby4>, [ '~> 2.1' ]
     s.add_dependency %<malloc>, [ '~> 1.1' ]
     s.add_dependency %<multiarray>, [ '~> 0.9' ]
     s.add_dependency %<hornetseye-frame>, [ '~> 0.6' ]
@@ -137,6 +138,7 @@ begin
     s.has_rdoc = 'yard'
     s.extra_rdoc_files = []
     s.rdoc_options = %w{--no-private}
+    s.add_dependency %<qtruby4>, [ '~> 2.1' ]
     s.add_dependency %<malloc>, [ '~> 1.1' ]
     s.add_dependency %<multiarray>, [ '~> 0.9' ]
     s.add_dependency %<hornetseye-frame>, [ '~> 0.6' ]
