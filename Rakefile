@@ -7,7 +7,7 @@ require 'rake/loaders/makefile'
 require 'rbconfig'
 
 PKG_NAME = 'hornetseye-qt4'
-PKG_VERSION = '0.1.0'
+PKG_VERSION = '0.1.1'
 CFG = RbConfig::CONFIG
 CXX = ENV[ 'CXX' ] || 'g++'
 RB_FILES = FileList[ 'lib/**/*.rb' ]
@@ -27,7 +27,7 @@ EMAIL = %q{jan@wedesoft.de}
 HOMEPAGE = %q{http://wedesoft.github.com/hornetseye-qt4/}
 
 OBJ = CC_FILES.ext 'o'
-$CXXFLAGS = "-DNDEBUG #{CFG[ 'CPPFLAGS' ]} #{CFG[ 'CFLAGS' ]} -I/usr/include/qt4"
+$CXXFLAGS = "-DNDEBUG -DHAVE_CONFIG_H -D__STDC_CONSTANT_MACROS #{CFG[ 'CPPFLAGS' ]} #{CFG[ 'CFLAGS' ]} -I/usr/include/qt4"
 if CFG[ 'rubyhdrdir' ]
   $CXXFLAGS = "#{$CXXFLAGS} -I#{CFG[ 'rubyhdrdir' ]} " + 
               "-I#{CFG[ 'rubyhdrdir' ]}/#{CFG[ 'arch' ]}"
@@ -46,7 +46,7 @@ desc 'Compile Ruby extension (default)'
 task :all => [ SO_FILE ]
 
 file SO_FILE => OBJ do |t|
-   sh "#{CXX} -shared -o #{t.name} #{OBJ} -lX11 -lXv -lQtGui -lQtCore #{$LIBRUBYARG}"
+   sh "#{CXX} -shared -o #{t.name} #{OBJ} -lswscale -lX11 -lXv -lQtGui -lQtCore #{$LIBRUBYARG}"
 end
 
 task :test => [ SO_FILE ]
@@ -71,6 +71,45 @@ task :uninstall do
     end
     FileUtils.rm_f "#{$SITEARCHDIR}/#{File.basename SO_FILE}"
   end
+end
+
+desc 'Create config.h'
+task :config_h => 'ext/config.h'
+
+def check_program
+  f_base_name = 'rakeconf'
+  begin
+    File.open( "#{f_base_name}.cc", 'w' ) { |f| yield f }
+    `#{CXX} -S #{$CXXFLAGS} -c -o #{f_base_name}.o #{f_base_name}.cc 2>&1 >> rake.log`
+    $?.exitstatus == 0
+  ensure
+    File.delete *Dir.glob( "#{f_base_name}.*" )
+  end
+end
+
+def check_c_header( name )
+  check_program do |c|
+    c.puts <<EOS
+extern "C" {
+  #include <#{name}>
+}
+int main(void) { return 0; }
+EOS
+  end
+end
+
+file 'ext/config.h' do |t|
+  s = "/* config.h. Generated from Rakefile by rake. */\n"
+  # need to compile with -D__STDC_CONSTANT_MACROS
+  if check_c_header 'libswscale/swscale.h'
+    s << "#define HAVE_LIBSWSCALE_INCDIR 1\n"
+  else
+    unless check_c_header 'ffmpeg/swscale.h'
+      raise 'Cannot find swscale.h header file'
+    end
+    s << "#undef HAVE_LIBSWSCALE_INCDIR\n"
+  end
+  File.open( t.name, 'w' ) { |f| f.puts s }
 end
 
 Rake::TestTask.new do |t|
@@ -172,7 +211,7 @@ rule '.o' => '.cc' do |t|
    sh "#{CXX} #{$CXXFLAGS} -c -o #{t.name} #{t.source}"
 end
 
-file ".depends.mf" do |t|
+file ".depends.mf" => :config_h do |t|
   sh "g++ -MM #{CC_FILES.join ' '} | " +
     "sed -e :a -e N -e 's/\\n/\\$/g' -e ta | " +
     "sed -e 's/ *\\\\\\$ */ /g' -e 's/\\$/\\n/g' | sed -e 's/^/ext\\//' > #{t.name}"
@@ -183,5 +222,5 @@ end
 import ".depends.mf"
 
 CLEAN.include 'ext/*.o'
-CLOBBER.include SO_FILE, 'doc', '.yardoc', '.depends.mf'
+CLOBBER.include SO_FILE, 'doc', '.yardoc', '.depends.mf', 'ext/config.h'
 
