@@ -31,8 +31,8 @@ extern "C" {
   void Init_hornetseye_qt4(void)
   {
     // XInitThreads();
-    rb_require( "hornetseye_frame" );
-    rb_require( "Qt4" );
+    rb_eval_string("require 'hornetseye_frame'");
+    rb_eval_string("require 'Qt4'");
     VALUE rbHornetseye = rb_define_module( "Hornetseye" );
     VALUE rbQt = rb_define_module( "Qt" );
     VALUE cWidget = rb_const_get( rbQt, rb_intern( "Widget" ) );
