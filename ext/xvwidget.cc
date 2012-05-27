@@ -297,17 +297,17 @@ Atom XvManager::findAtom( Display *display, const char *name ) throw (Error)
   assert( m_port != 0 );
   XvAttribute *attributes;
   int numAttributes;
+  Atom retVal = None;
   attributes = XvQueryPortAttributes( display, m_port,
                                       &numAttributes );
-  ERRORMACRO( attributes != NULL, Error, ,
-              "Error requesting attributes of X video port." );
-  Atom retVal = None;
-  for ( int i=0; i<numAttributes; i++ )
-    if ( strcmp( attributes[i].name, name ) == 0 ) {
-      retVal = XInternAtom( display, name, False );
-      break;
-    }
-  XFree( attributes );
+  if (attributes != NULL) {
+    for ( int i=0; i<numAttributes; i++ )
+      if ( strcmp( attributes[i].name, name ) == 0 ) {
+        retVal = XInternAtom( display, name, False );
+        break;
+      }
+    XFree( attributes );
+  }
   return retVal;
 }
 
