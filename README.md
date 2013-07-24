@@ -15,7 +15,7 @@ Installation
 
 This Ruby extension requires Qt4, QtRuby4 and the software scaling library. If you are running Debian or (K)ubuntu, you can install them like this:
 
-    $ sudo aptitude install libqt4-ruby1.8 qt4-dev-tools libswscale-dev
+    $ sudo aptitude install libqt4-ruby1.8 qt4-dev-tools libswscale-dev libboost-dev
 
 To install this Ruby extension, use the following command:
 
