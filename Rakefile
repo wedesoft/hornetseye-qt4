@@ -7,7 +7,7 @@ require 'rake/loaders/makefile'
 require 'rbconfig'
 
 PKG_NAME = 'hornetseye-qt4'
-PKG_VERSION = '0.3.1'
+PKG_VERSION = '0.3.2'
 CFG = RbConfig::CONFIG
 CXX = ENV[ 'CXX' ] || 'g++'
 RB_FILES = FileList[ 'lib/**/*.rb' ]
@@ -40,6 +40,7 @@ $LIBRUBYARG = "-L#{CFG[ 'libdir' ]} #{CFG[ 'LIBRUBYARG' ]} #{CFG[ 'LDFLAGS' ]} "
 $SITELIBDIR = CFG[ 'sitelibdir' ]
 $SITEARCHDIR = CFG[ 'sitearchdir' ]
 $LDSHARED = CFG[ 'LDSHARED' ][ CFG[ 'LDSHARED' ].index( ' ' ) .. -1 ]
+$CXXFLAGS = "#{$CXXFLAGS} -I/usr/include/ffmpeg"
 
 task :default => :all
 
@@ -104,16 +105,11 @@ file 'ext/config.h' do |t|
   # need to compile with -D__STDC_CONSTANT_MACROS
   if check_c_header 'libswscale/swscale.h'
     s << "#define HAVE_LIBSWSCALE_INCDIR 1\n"
-    s << "#undef HAVE_FFMPEG_LIBSWSCALE_INCDIR 1\n"
-  elsif check_c_header 'ffmpeg/libswscale/swscale.h'
-    s << "#undef HAVE_LIBSWSCALE_INCDIR\n"
-    s << "#define HAVE_FFMPEG_LIBSWSCALE_INCDIR 1\n"
   else
     unless check_c_header 'ffmpeg/swscale.h'
       raise 'Cannot find swscale.h header file'
     end
     s << "#undef HAVE_LIBSWSCALE_INCDIR\n"
-    s << "#undef HAVE_FFMPEG_LIBSWSCALE_INCDIR 1\n"
   end
   File.open( t.name, 'w' ) { |f| f.puts s }
 end
